@@ -9,6 +9,7 @@ import (
 	"go/token"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	parseutil "gopkg.in/src-d/go-parse-utils.v1"
@@ -50,12 +51,17 @@ func NewPkg(pkg *doc.Package, fset *token.FileSet) *Pkg {
 	for i, t := range pkg.Types {
 		types[i] = NewType(t, fset)
 	}
+
+	var files = make([]string, len(pkg.Filenames))
+	for i, f := range pkg.Filenames {
+		files[i] = removeGoPath(f)
+	}
 	return &Pkg{
 		Doc:        pkg.Doc,
 		Name:       pkg.Name,
 		ImportPath: pkg.ImportPath,
 		Imports:    pkg.Imports,
-		Filenames:  pkg.Filenames,
+		Filenames:  files,
 		Notes:      pkg.Notes,
 		Bugs:       pkg.Bugs,
 		Consts:     consts,
@@ -66,6 +72,7 @@ func NewPkg(pkg *doc.Package, fset *token.FileSet) *Pkg {
 }
 
 type Type struct {
+	Kind string
 	Doc  string
 	Name string
 	Decl string
@@ -101,6 +108,7 @@ func NewType(typ *doc.Type, fset *token.FileSet) *Type {
 	}
 
 	return &Type{
+		Kind:    "type",
 		Doc:     typ.Doc,
 		Name:    typ.Name,
 		Decl:    buf.String(),
@@ -112,6 +120,7 @@ func NewType(typ *doc.Type, fset *token.FileSet) *Type {
 }
 
 type Value struct {
+	Kind  string
 	Doc   string
 	Names []string
 	Decl  string
@@ -121,6 +130,7 @@ func NewValue(val *doc.Value, fset *token.FileSet) *Value {
 	var buf bytes.Buffer
 	printer.Fprint(&buf, fset, val.Decl)
 	return &Value{
+		Kind:  "value",
 		Doc:   val.Doc,
 		Names: val.Names,
 		Decl:  buf.String(),
@@ -128,6 +138,7 @@ func NewValue(val *doc.Value, fset *token.FileSet) *Value {
 }
 
 type Func struct {
+	Kind string
 	Doc  string
 	Name string
 	Decl string
@@ -141,6 +152,7 @@ func NewFunc(fn *doc.Func, fset *token.FileSet) *Func {
 	var buf bytes.Buffer
 	printer.Fprint(&buf, fset, fn.Decl)
 	return &Func{
+		Kind:  "func",
 		Doc:   fn.Doc,
 		Name:  fn.Name,
 		Recv:  fn.Recv,
@@ -176,4 +188,14 @@ func main() {
 	}
 
 	fmt.Println(string(bytes))
+}
+
+func removeGoPath(path string) string {
+	for _, p := range parseutil.DefaultGoPath {
+		p = filepath.Join(p, "src")
+		if strings.HasPrefix(path, p) {
+			return strings.TrimLeft(path[len(p):], "/\\")
+		}
+	}
+	return path
 }
