@@ -1,0 +1,2123 @@
+{
+	"Doc": "",
+	"Name": "kallax",
+	"ImportPath": "gopkg.in/src-d/go-kallax.v1",
+	"Imports": [
+		"bytes",
+		"database/sql",
+		"database/sql/driver",
+		"encoding/hex",
+		"errors",
+		"fmt",
+		"github.com/Masterminds/squirrel",
+		"github.com/lann/builder",
+		"github.com/lib/pq",
+		"github.com/oklog/ulid",
+		"github.com/satori/go.uuid",
+		"github.com/stretchr/testify/require",
+		"github.com/stretchr/testify/suite",
+		"gopkg.in/src-d/go-kallax.v1/types",
+		"io",
+		"log",
+		"math/rand",
+		"os",
+		"strings",
+		"sync",
+		"testing",
+		"time",
+		"unsafe"
+	],
+	"Filenames": [
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/batcher.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/batcher_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/common_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/doc.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/events.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/events_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/model.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/model_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/operators.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/operators_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/query.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/query_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/resultset.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/schema.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/schema_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/store.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/store_test.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/timestamps.go",
+		"/home/miguel/go/src/gopkg.in/src-d/go-kallax.v1/timestamps_test.go"
+	],
+	"Notes": {},
+	"Bugs": null,
+	"Consts": [],
+	"Types": [
+		{
+			"Doc": "AfterDeleter will do some operations after being deleted.\n",
+			"Name": "AfterDeleter",
+			"Decl": "type AfterDeleter interface {\n\tAfterDelete() error\n}// AfterDelete will do some operations after being deleted. If an error is\n// returned, it will cause the delete to be rolled back.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "AfterInserter will do some operations after being inserted.\n",
+			"Name": "AfterInserter",
+			"Decl": "type AfterInserter interface {\n\tAfterInsert() error\n}// AfterInsert will do some operations after being inserted. If an error is\n// returned, it will cause the insert to be rolled back.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "AfterSaver will do some operations after being inserted or updated.\n",
+			"Name": "AfterSaver",
+			"Decl": "type AfterSaver interface {\n\tAfterSave() error\n}// AfterSave will do some operations after being inserted or updated. If an\n// error is returned, it will cause the insert or update to be rolled back.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "AfterUpdater will do some operations after being updated.\n",
+			"Name": "AfterUpdater",
+			"Decl": "type AfterUpdater interface {\n\tAfterUpdate() error\n}// AfterUpdate will do some operations after being updated. If an error is\n// returned, it will cause the update to be rolled back.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ArraySchemaField is an interface that defines if a field is a JSON\narray.\n",
+			"Name": "ArraySchemaField",
+			"Decl": "type ArraySchemaField interface {\n\tSchemaField\n\n}// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "BaseQuery is a generic query builder to build queries programmatically.\n",
+			"Name": "BaseQuery",
+			"Decl": "type BaseQuery struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewBaseQuery creates a new BaseQuery for querying the table of the given schema.\n",
+					"Name": "NewBaseQuery",
+					"Decl": "func NewBaseQuery(schema Schema) *BaseQuery",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "AddRelation adds a relationship if the given to the query, which is present\nin the given field of the query base schema. A condition to filter can also\nbe passed in the case of one to many relationships.\n",
+					"Name": "AddRelation",
+					"Decl": "func (q *BaseQuery) AddRelation(schema Schema, field string, typ RelationshipType, filter Condition) error",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "BatchSize sets the batch size.\n",
+					"Name": "BatchSize",
+					"Decl": "func (q *BaseQuery) BatchSize(size uint64)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Copy returns an identical copy of the query. BaseQuery is mutable, that is\nwhy this method is provided.\n",
+					"Name": "Copy",
+					"Decl": "func (q *BaseQuery) Copy() *BaseQuery",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "GetBatchSize returns the number of rows retrieved per batch while retrieving\n1:N relationships.\n",
+					"Name": "GetBatchSize",
+					"Decl": "func (q *BaseQuery) GetBatchSize() uint64",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "GetLimit returns the max number of rows to retrieve.\n",
+					"Name": "GetLimit",
+					"Decl": "func (q *BaseQuery) GetLimit() uint64",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "GetOffset returns the number of rows to skip.\n",
+					"Name": "GetOffset",
+					"Decl": "func (q *BaseQuery) GetOffset() uint64",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Limit sets the max number of rows to retrieve.\n",
+					"Name": "Limit",
+					"Decl": "func (q *BaseQuery) Limit(n uint64)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Offset sets the number of rows to skip.\n",
+					"Name": "Offset",
+					"Decl": "func (q *BaseQuery) Offset(n uint64)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Order adds the given order clauses to the list of columns to order the\nresults by.\n",
+					"Name": "Order",
+					"Decl": "func (q *BaseQuery) Order(cols ...ColumnOrder)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Schema returns the Schema of the query.\n",
+					"Name": "Schema",
+					"Decl": "func (q *BaseQuery) Schema() Schema",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Select adds the given columns to the list of selected columns in the query.\n",
+					"Name": "Select",
+					"Decl": "func (q *BaseQuery) Select(columns ...SchemaField)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "SelectNot adds the given columns to the list of excluded columns in the query.\n",
+					"Name": "SelectNot",
+					"Decl": "func (q *BaseQuery) SelectNot(columns ...SchemaField)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "String returns the SQL generated by the query. If the query is malformed,\nit will return an empty string, as errors compiling the SQL are ignored.\n",
+					"Name": "String",
+					"Decl": "func (q *BaseQuery) String() string",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				},
+				{
+					"Doc": "Where adds a new condition to filter the query. All conditions added are\nconcatenated with \"and\".\n  q.Where(Eq(NameColumn, \"foo\"))\n  q.Where(Gt(AgeColumn, 18))\n  // ... WHERE name = \"foo\" AND age \u003e 18\n",
+					"Name": "Where",
+					"Decl": "func (q *BaseQuery) Where(cond Condition)",
+					"Recv": "*BaseQuery",
+					"Orig": "*BaseQuery",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "BaseResultSet is a generic collection of rows.\n",
+			"Name": "BaseResultSet",
+			"Decl": "type BaseResultSet struct {\n\t*sql.Rows\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewResultSet creates a new result set with the given rows and columns.\nIt is mandatory that all column names are in the same order and are exactly\nequal to the ones in the query that produced the rows.\n",
+					"Name": "NewResultSet",
+					"Decl": "func NewResultSet(rows *sql.Rows, readOnly bool, relationships []Relationship, columns ...string) *BaseResultSet",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "Get returns the next record in the schema.\n",
+					"Name": "Get",
+					"Decl": "func (rs *BaseResultSet) Get(schema Schema) (Record, error)",
+					"Recv": "*BaseResultSet",
+					"Orig": "*BaseResultSet",
+					"Level": 0
+				},
+				{
+					"Doc": "RowScan copies the columns in the current row into the values pointed at by\ndest. The number of values in dest must be the same as the number of columns\nselected in the query.\n",
+					"Name": "RawScan",
+					"Decl": "func (rs *BaseResultSet) RawScan(dest ...interface{}) error",
+					"Recv": "*BaseResultSet",
+					"Orig": "*BaseResultSet",
+					"Level": 0
+				},
+				{
+					"Doc": "Scan fills the column fields of the given value with the current row.\n",
+					"Name": "Scan",
+					"Decl": "func (rs *BaseResultSet) Scan(record Record) error",
+					"Recv": "*BaseResultSet",
+					"Orig": "*BaseResultSet",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "BaseSchema is the basic implementation of Schema.\n",
+			"Name": "BaseSchema",
+			"Decl": "type BaseSchema struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewBaseSchema creates a new schema with the given table, alias, identifier\nand columns.\n",
+					"Name": "NewBaseSchema",
+					"Decl": "func NewBaseSchema(table, alias string, id SchemaField, fks ForeignKeys, ctor RecordConstructor, autoIncr bool, columns ...SchemaField) *BaseSchema",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "Alias",
+					"Decl": "func (s *BaseSchema) Alias() string",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "Columns",
+					"Decl": "func (s *BaseSchema) Columns() []SchemaField",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "ForeignKey",
+					"Decl": "func (s *BaseSchema) ForeignKey(field string) (*ForeignKey, bool)",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "ID",
+					"Decl": "func (s *BaseSchema) ID() SchemaField",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "New",
+					"Decl": "func (s *BaseSchema) New() Record",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "Table",
+					"Decl": "func (s *BaseSchema) Table() string",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "WithAlias",
+					"Decl": "func (s *BaseSchema) WithAlias(field string) Schema",
+					"Recv": "*BaseSchema",
+					"Orig": "*BaseSchema",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "BaseSchemaField is a basic schema field with name.\n",
+			"Name": "BaseSchemaField",
+			"Decl": "type BaseSchemaField struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "QualifiedName",
+					"Decl": "func (f *BaseSchemaField) QualifiedName(schema Schema) string",
+					"Recv": "*BaseSchemaField",
+					"Orig": "*BaseSchemaField",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "String",
+					"Decl": "func (f BaseSchemaField) String() string",
+					"Recv": "BaseSchemaField",
+					"Orig": "BaseSchemaField",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "BatchingResultSet is a result set that retrieves all the items up to the\nbatch size set in the query.\nIf there are 1:N relationships, it collects all the identifiers of\nthose records, retrieves all the rows matching them in the table of the\nthe N end, and assigns them to their correspondent to the record they belong\nto.\nIt will continue doing this process until no more rows are returned by the\nquery.\nThis minimizes the number of queries and operations to perform in order to\nretrieve a set of results and their relationships.\n",
+			"Name": "BatchingResultSet",
+			"Decl": "type BatchingResultSet struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewBatchingResultSet returns a new result set that performs batching\nunderneath.\n",
+					"Name": "NewBatchingResultSet",
+					"Decl": "func NewBatchingResultSet(runner *batchQueryRunner) *BatchingResultSet",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "Close will do nothing, as the internal result sets used by this are closed\nwhen the rows at fetched. It will never throw an error.\n",
+					"Name": "Close",
+					"Decl": "func (rs *BatchingResultSet) Close() error",
+					"Recv": "*BatchingResultSet",
+					"Orig": "*BatchingResultSet",
+					"Level": 0
+				},
+				{
+					"Doc": "Get returns the next processed record and the last error occurred.\nEven though it accepts a schema, it is ignored, as the result set is\nalready aware of it. This is here just to be able to imeplement the\nResultSet interface.\n",
+					"Name": "Get",
+					"Decl": "func (rs *BatchingResultSet) Get(_ Schema) (Record, error)",
+					"Recv": "*BatchingResultSet",
+					"Orig": "*BatchingResultSet",
+					"Level": 0
+				},
+				{
+					"Doc": "Next advances the internal index of the fetched records in one.\nIf there are no fetched records, will fetch the next batch.\nIt will return false when there are no more rows.\n",
+					"Name": "Next",
+					"Decl": "func (rs *BatchingResultSet) Next() bool",
+					"Recv": "*BatchingResultSet",
+					"Orig": "*BatchingResultSet",
+					"Level": 0
+				},
+				{
+					"Doc": "RawScan will always throw an error, as this is not a supported operation of\na batching result set.\n",
+					"Name": "RawScan",
+					"Decl": "func (rs *BatchingResultSet) RawScan(_ ...interface{}) error",
+					"Recv": "*BatchingResultSet",
+					"Orig": "*BatchingResultSet",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "BeforeDeleter will do some operations before being deleted.\n",
+			"Name": "BeforeDeleter",
+			"Decl": "type BeforeDeleter interface {\n\tBeforeDelete() error\n}// BeforeDelete will do some operations before being deleted. If an error is\n// returned, it will prevent the delete from happening.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "BeforeInserter will do some operations before being inserted.\n",
+			"Name": "BeforeInserter",
+			"Decl": "type BeforeInserter interface {\n\tBeforeInsert() error\n}// BeforeInsert will do some operations before being inserted. If an error is\n// returned, it will prevent the insert from happening.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "BeforeSaver will do some operations before being updated or inserted.\n",
+			"Name": "BeforeSaver",
+			"Decl": "type BeforeSaver interface {\n\tBeforeSave() error\n}// BeforeSave will do some operations before being updated or inserted. If an\n// error is returned, it will prevent the update or insert from happening.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "BeforeUpdater will do some operations before being updated.\n",
+			"Name": "BeforeUpdater",
+			"Decl": "type BeforeUpdater interface {\n\tBeforeUpdate() error\n}// BeforeUpdate will do some operations before being updated. If an error is\n// returned, it will prevent the update from happening.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ColumnAddresser provides the pointer addresses of columns.\n",
+			"Name": "ColumnAddresser",
+			"Decl": "type ColumnAddresser interface {\n\tColumnAddress(string) (interface{}, error)\n}// ColumnAddress returns the pointer to the column value of the given\n// column name, or an error if it does not exist in the model.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ColumnOrder represents a column name with its order.\n",
+			"Name": "ColumnOrder",
+			"Decl": "type ColumnOrder interface {\n\tToSql(Schema) string\n\n}// ToSql returns the SQL representation of the column with its order.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "Asc returns a column ordered by ascending order.\n",
+					"Name": "Asc",
+					"Decl": "func Asc(col SchemaField) ColumnOrder",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Desc returns a column ordered by descending order.\n",
+					"Name": "Desc",
+					"Decl": "func Desc(col SchemaField) ColumnOrder",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": []
+		},
+		{
+			"Doc": "Condition represents a condition of filtering in a query.\n",
+			"Name": "Condition",
+			"Decl": "type Condition func(Schema) ToSqler",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "And returns the given conditions joined by logical ands.\n",
+					"Name": "And",
+					"Decl": "func And(conds ...Condition) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayContainedBy returns a condition that will be true when `col` has all\nits elements present in the given values.\n",
+					"Name": "ArrayContainedBy",
+					"Decl": "func ArrayContainedBy(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayContains returns a condition that will be true when `col` contains all the\ngiven values.\n",
+					"Name": "ArrayContains",
+					"Decl": "func ArrayContains(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayEq returns a condition that will be true when `col` is equal to an\narray with the given elements.\n",
+					"Name": "ArrayEq",
+					"Decl": "func ArrayEq(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayGt returns a condition that will be true when all elements in `col`\nare greater or equal than their counterparts in the given values, and one of\nthe elements at least is greater than its counterpart in the given values.\nFor example: for a col with values [1,2,3] and values [1,2,2], it will be\ntrue.\n",
+					"Name": "ArrayGt",
+					"Decl": "func ArrayGt(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayGtOrEq returns a condition that will be true when all elements in `col`\nare greater or equal than their counterparts in the given values.\nFor example: for a col with values [1,2,2] and values [1,2,2], it will be\ntrue.\n",
+					"Name": "ArrayGtOrEq",
+					"Decl": "func ArrayGtOrEq(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayLt returns a condition that will be true when all elements in `col`\nare lower or equal than their counterparts in the given values, and one of\nthe elements at least is lower than its counterpart in the given values.\nFor example: for a col with values [1,2,2] and values [1,2,3], it will be\ntrue.\n",
+					"Name": "ArrayLt",
+					"Decl": "func ArrayLt(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayLtOrEq returns a condition that will be true when all elements in `col`\nare lower or equal than their counterparts in the given values.\nFor example: for a col with values [1,2,2] and values [1,2,2], it will be\ntrue.\n",
+					"Name": "ArrayLtOrEq",
+					"Decl": "func ArrayLtOrEq(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayNotEq returns a condition that will be true when `col` is not equal to\nan array with the given elements.\n",
+					"Name": "ArrayNotEq",
+					"Decl": "func ArrayNotEq(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "ArrayOverlap returns a condition that will be true when `col` has elements\nin common with an array formed by the given values.\n",
+					"Name": "ArrayOverlap",
+					"Decl": "func ArrayOverlap(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Eq returns a condition that will be true when `col` is equal to `value`.\n",
+					"Name": "Eq",
+					"Decl": "func Eq(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Gt returns a condition that will be true when `col` is greater than `value`.\n",
+					"Name": "Gt",
+					"Decl": "func Gt(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "GtOrEq returns a condition that will be true when `col` is greater than\n`value` or equal.\n",
+					"Name": "GtOrEq",
+					"Decl": "func GtOrEq(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Ilike returns a condition that will be true when `col` matches the given `value`.\nThe match is case-insensitive.\nSee https://www.postgresql.org/docs/9.6/static/functions-matching.html.\n",
+					"Name": "Ilike",
+					"Decl": "func Ilike(col SchemaField, value string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "In returns a condition that will be true when `col` is equal to any of the\npassed `values`.\n",
+					"Name": "In",
+					"Decl": "func In(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONContainedBy returns a condition that will be true when `col` is\ncontained by the given element converted to JSON.\n",
+					"Name": "JSONContainedBy",
+					"Decl": "func JSONContainedBy(col SchemaField, elem interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONContains returns a condition that will be true when `col` contains\nthe given element converted to JSON.\n",
+					"Name": "JSONContains",
+					"Decl": "func JSONContains(col SchemaField, elem interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONContainsAllKeys returns a condition that will be true when `col`\ncontains all the given keys. Will also match elements if the column is an\narray.\n",
+					"Name": "JSONContainsAllKeys",
+					"Decl": "func JSONContainsAllKeys(col SchemaField, keys ...string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONContainsAny returns a condition that will be true when `col` contains\nany of the given elements converted to json.\nGiving no elements will cause an error to be returned when the condition is\nevaluated.\n",
+					"Name": "JSONContainsAny",
+					"Decl": "func JSONContainsAny(col SchemaField, elems ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONContainsAnyKey returns a condition that will be true when `col` contains\nany of the given keys. Will also match elements if the column is an array.\n",
+					"Name": "JSONContainsAnyKey",
+					"Decl": "func JSONContainsAnyKey(col SchemaField, keys ...string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONIsArray returns a condition that will be true when `col` is a JSON\narray.\n",
+					"Name": "JSONIsArray",
+					"Decl": "func JSONIsArray(col SchemaField) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "JSONIsObject returns a condition that will be true when `col` is a JSON\nobject.\n",
+					"Name": "JSONIsObject",
+					"Decl": "func JSONIsObject(col SchemaField) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Like returns a condition that will be true when `col` matches the given `value`.\nThe match is case-sensitive.\nSee https://www.postgresql.org/docs/9.6/static/functions-matching.html.\n",
+					"Name": "Like",
+					"Decl": "func Like(col SchemaField, value string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Lt returns a condition that will be true when `col` is lower than `value`.\n",
+					"Name": "Lt",
+					"Decl": "func Lt(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "LtOrEq returns a condition that will be true when `col` is lower than\n`value` or equal.\n",
+					"Name": "LtOrEq",
+					"Decl": "func LtOrEq(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "MatchRegex returns a condition that will be true when `col` matches\nthe given POSIX regex. Match is case insensitive.\n",
+					"Name": "MatchRegex",
+					"Decl": "func MatchRegex(col SchemaField, pattern string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "MatchRegexCase returns a condition that will be true when `col` matches\nthe given POSIX regex. Match is case sensitive.\n",
+					"Name": "MatchRegexCase",
+					"Decl": "func MatchRegexCase(col SchemaField, pattern string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Neq returns a condition that will be true when `col` is not `value`.\n",
+					"Name": "Neq",
+					"Decl": "func Neq(col SchemaField, value interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Not returns the given condition negated.\n",
+					"Name": "Not",
+					"Decl": "func Not(cond Condition) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NotIn returns a condition that will be true when `col` is distinct to all of the\npassed `values`.\n",
+					"Name": "NotIn",
+					"Decl": "func NotIn(col SchemaField, values ...interface{}) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NotMatchRegex returns a condition that will be true when `col` does not\nmatch the given POSIX regex. Match is case insensitive.\n",
+					"Name": "NotMatchRegex",
+					"Decl": "func NotMatchRegex(col SchemaField, pattern string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NotMatchRegexCase returns a condition that will be true when `col` does not\nmatch the given POSIX regex. Match is case sensitive.\n",
+					"Name": "NotMatchRegexCase",
+					"Decl": "func NotMatchRegexCase(col SchemaField, pattern string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NotSimilarTo returns a condition that will be true when `col` does not match\nthe given `value`.\nSee https://www.postgresql.org/docs/9.6/static/functions-matching.html.\n",
+					"Name": "NotSimilarTo",
+					"Decl": "func NotSimilarTo(col SchemaField, value string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "Or returns the given conditions joined by logical ors.\n",
+					"Name": "Or",
+					"Decl": "func Or(conds ...Condition) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "SimilarTo returns a condition that will be true when `col` matches the given\n`value`.\nSee https://www.postgresql.org/docs/9.6/static/functions-matching.html.\n",
+					"Name": "SimilarTo",
+					"Decl": "func SimilarTo(col SchemaField, value string) Condition",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": []
+		},
+		{
+			"Doc": "ForeignKey contains the schema field of the foreign key and if it is an\ninverse foreign key or not.\n",
+			"Name": "ForeignKey",
+			"Decl": "type ForeignKey struct {\n\t*BaseSchemaField\n\tInverse\tbool\n}",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewForeignKey creates a new Foreign key with the given name.\n",
+					"Name": "NewForeignKey",
+					"Decl": "func NewForeignKey(name string, inverse bool) *ForeignKey",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": []
+		},
+		{
+			"Doc": "ForeignKeys is a mapping between relationships and their foreign key field.\n",
+			"Name": "ForeignKeys",
+			"Decl": "type ForeignKeys map[string]*ForeignKey",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "GenericStorer is a type that contains a generic store and has methods to\nretrieve it and set it.\n",
+			"Name": "GenericStorer",
+			"Decl": "type GenericStorer interface {\n\tGenericStore() *Store\n\tSetGenericStore(*Store)\n}// GenericStore returns the generic store in this type.\n// SetGenericStore sets the generic store for this type.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Identifiable must be implemented by those values that can be identified by an ID.\n",
+			"Name": "Identifiable",
+			"Decl": "type Identifiable interface {\n\tGetID() Identifier\n}// GetID returns the ID.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Identifier is a type used to identify a model.\n",
+			"Name": "Identifier",
+			"Decl": "type Identifier interface {\n\tsql.Scanner\n\tdriver.Valuer\n\tEquals(Identifier) bool\n\tIsEmpty() bool\n\tRaw() interface{}\n}// Equals reports whether the identifier and the given one are equal.\n// Raw returns the internal value of the identifier.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "JSONKeyType is the type of an object key in a JSON.\n",
+			"Name": "JSONKeyType",
+			"Decl": "type JSONKeyType string",
+			"Consts": [
+				{
+					"Doc": "",
+					"Names": [
+						"JSONAny",
+						"JSONText",
+						"JSONInt",
+						"JSONFloat",
+						"JSONBool"
+					],
+					"Decl": "const (\n\tJSONAny\t\tJSONKeyType\t= \"\"\n\tJSONText\tJSONKeyType\t= \"text\"\n\tJSONInt\t\tJSONKeyType\t= \"bigint\"\n\tJSONFloat\tJSONKeyType\t= \"decimal\"\n\tJSONBool\tJSONKeyType\t= \"bool\"\n)// JSONAny represents a type that can't be casted.\n// JSONBool is a boolean json type.\n"
+				}
+			],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "JSONSchemaArray is a SchemaField that represents a JSON array.\n",
+			"Name": "JSONSchemaArray",
+			"Decl": "type JSONSchemaArray struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewJSONSchemaArray creates a new SchemaField that is a json array.\n",
+					"Name": "NewJSONSchemaArray",
+					"Decl": "func NewJSONSchemaArray(field string, paths ...string) *JSONSchemaArray",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "QualifiedName",
+					"Decl": "func (f *JSONSchemaArray) QualifiedName(schema Schema) string",
+					"Recv": "*JSONSchemaArray",
+					"Orig": "*JSONSchemaArray",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "String",
+					"Decl": "func (f *JSONSchemaArray) String() string",
+					"Recv": "*JSONSchemaArray",
+					"Orig": "*JSONSchemaArray",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "JSONSchemaKey is a SchemaField that represents a key in a JSON object.\n",
+			"Name": "JSONSchemaKey",
+			"Decl": "type JSONSchemaKey struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewJSONSchemaKey creates a new SchemaField that is a json key.\n",
+					"Name": "NewJSONSchemaKey",
+					"Decl": "func NewJSONSchemaKey(typ JSONKeyType, field string, paths ...string) *JSONSchemaKey",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "QualifiedName",
+					"Decl": "func (f *JSONSchemaKey) QualifiedName(schema Schema) string",
+					"Recv": "*JSONSchemaKey",
+					"Orig": "*JSONSchemaKey",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "String",
+					"Decl": "func (f *JSONSchemaKey) String() string",
+					"Recv": "*JSONSchemaKey",
+					"Orig": "*JSONSchemaKey",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "LoggerFunc is a function that takes a log message with some arguments and\nlogs it.\n",
+			"Name": "LoggerFunc",
+			"Decl": "type LoggerFunc func(string, ...interface{})",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Model contains all the basic fields that make something a model, that is,\nthe ID and some internal data used by kallax.\nTo make a struct a model, it only needs to have Model embedded.\n\n\ttype MyModel struct {\n\t\tkallax.Model\n\t\tFoo string\n\t}\n\nCustom name for the table can be specified using the struct tag `table` when\nembedding the Model.\n\n\ttype MyModel struct {\n\t\tkallax.Model `table:\"custom_name\"`\n\t}\n\nOtherwise, the default name of the table is the name of the model converted\nto lower snake case. E.g: MyModel =\u003e my_model.\nNo pluralization is done right now, but might be done in the future, so\nplease, set the name of the tables yourself.\n",
+			"Name": "Model",
+			"Decl": "type Model struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewModel creates a new Model that is writable and not persisted.\n",
+					"Name": "NewModel",
+					"Decl": "func NewModel() Model",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "AddVirtualColumn adds a new virtual column with the given name and value.\nThis method is only intended for internal use. It is only exposed for\ntechnical reasons.\n",
+					"Name": "AddVirtualColumn",
+					"Decl": "func (m *Model) AddVirtualColumn(name string, v Identifier)",
+					"Recv": "*Model",
+					"Orig": "*Model",
+					"Level": 0
+				},
+				{
+					"Doc": "ClearVirtualColumns clears all the previous virtual columns.\nThis method is only intended for internal use. It is only exposed for\ntechnical reasons.\n",
+					"Name": "ClearVirtualColumns",
+					"Decl": "func (m *Model) ClearVirtualColumns()",
+					"Recv": "*Model",
+					"Orig": "*Model",
+					"Level": 0
+				},
+				{
+					"Doc": "IsPersisted returns whether the Model has already been persisted to the\ndatabase or not.\n",
+					"Name": "IsPersisted",
+					"Decl": "func (m *Model) IsPersisted() bool",
+					"Recv": "*Model",
+					"Orig": "*Model",
+					"Level": 0
+				},
+				{
+					"Doc": "IsWritable returns whether this Model can be saved into the database.\nFor example, a model with partially retrieved data is not writable, so\nit is not saved by accident and the data is corrupted. For example, if\nyou select only 2 columns out of all the ones the table has, it will not\nbe writable.\n",
+					"Name": "IsWritable",
+					"Decl": "func (m *Model) IsWritable() bool",
+					"Recv": "*Model",
+					"Orig": "*Model",
+					"Level": 0
+				},
+				{
+					"Doc": "VirtualColumn returns the value of the virtual column with the given column name.\nThis method is only intended for internal use. It is only exposed for\ntechnical reasons.\n",
+					"Name": "VirtualColumn",
+					"Decl": "func (m *Model) VirtualColumn(name string) Identifier",
+					"Recv": "*Model",
+					"Orig": "*Model",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "NumericID is a wrapper for int64 that implements the Identifier interface.\nYou don't need to actually use this as a type in your model. They will be\nautomatically converted to and from in the generated code.\n",
+			"Name": "NumericID",
+			"Decl": "type NumericID int64",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "Equals reports whether the ID and the given one are equals.\n",
+					"Name": "Equals",
+					"Decl": "func (id NumericID) Equals(other Identifier) bool",
+					"Recv": "NumericID",
+					"Orig": "NumericID",
+					"Level": 0
+				},
+				{
+					"Doc": "IsEmpty returns whether the ID is empty or not. An empty ID means it has not\nbeen set yet.\n",
+					"Name": "IsEmpty",
+					"Decl": "func (id NumericID) IsEmpty() bool",
+					"Recv": "NumericID",
+					"Orig": "NumericID",
+					"Level": 0
+				},
+				{
+					"Doc": "Raw returns the underlying raw value.\n",
+					"Name": "Raw",
+					"Decl": "func (id NumericID) Raw() interface{}",
+					"Recv": "NumericID",
+					"Orig": "NumericID",
+					"Level": 0
+				},
+				{
+					"Doc": "Scan implements the Scanner interface.\n",
+					"Name": "Scan",
+					"Decl": "func (id *NumericID) Scan(src interface{}) error",
+					"Recv": "*NumericID",
+					"Orig": "*NumericID",
+					"Level": 0
+				},
+				{
+					"Doc": "String returns the string representation of the ID.\n",
+					"Name": "String",
+					"Decl": "func (id NumericID) String() string",
+					"Recv": "NumericID",
+					"Orig": "NumericID",
+					"Level": 0
+				},
+				{
+					"Doc": "Value implements the Valuer interface.\n",
+					"Name": "Value",
+					"Decl": "func (id NumericID) Value() (driver.Value, error)",
+					"Recv": "NumericID",
+					"Orig": "NumericID",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "",
+			"Name": "OpsSuite",
+			"Decl": "type OpsSuite struct {\n\tsuite.Suite\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "SetupTest",
+					"Decl": "func (s *OpsSuite) SetupTest()",
+					"Recv": "*OpsSuite",
+					"Orig": "*OpsSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestArrayOperators",
+					"Decl": "func (s *OpsSuite) TestArrayOperators()",
+					"Recv": "*OpsSuite",
+					"Orig": "*OpsSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestJSONOperators",
+					"Decl": "func (s *OpsSuite) TestJSONOperators()",
+					"Recv": "*OpsSuite",
+					"Orig": "*OpsSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestOperators",
+					"Decl": "func (s *OpsSuite) TestOperators()",
+					"Recv": "*OpsSuite",
+					"Orig": "*OpsSuite",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "Persistable must be implemented by those values that can be persisted.\n",
+			"Name": "Persistable",
+			"Decl": "type Persistable interface {\n\tIsPersisted() bool\n\n}// IsPersisted returns whether this Model is new in the store or not.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Query is the common interface all queries must satisfy. The basic abilities\nof a query are compiling themselves to something executable and return\nsome query settings.\n",
+			"Name": "Query",
+			"Decl": "type Query interface {\n\tSchema() Schema\n\tGetOffset() uint64\n\tGetLimit() uint64\n\tGetBatchSize() uint64\n\n}// Schema returns the schema of the query model.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "",
+			"Name": "QuerySuite",
+			"Decl": "type QuerySuite struct {\n\tsuite.Suite\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "SetupTest",
+					"Decl": "func (s *QuerySuite) SetupTest()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestAddRelation",
+					"Decl": "func (s *QuerySuite) TestAddRelation()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestAddRelation_FKNotFound",
+					"Decl": "func (s *QuerySuite) TestAddRelation_FKNotFound()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestAddRelation_Inverse",
+					"Decl": "func (s *QuerySuite) TestAddRelation_Inverse()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestAddRelation_ManyToMany",
+					"Decl": "func (s *QuerySuite) TestAddRelation_ManyToMany()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestCopy",
+					"Decl": "func (s *QuerySuite) TestCopy()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestOrder",
+					"Decl": "func (s *QuerySuite) TestOrder()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSelect",
+					"Decl": "func (s *QuerySuite) TestSelect()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSelectNot",
+					"Decl": "func (s *QuerySuite) TestSelectNot()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSelectNotSelectSelectNot",
+					"Decl": "func (s *QuerySuite) TestSelectNotSelectSelectNot()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSelectSelectNot",
+					"Decl": "func (s *QuerySuite) TestSelectSelectNot()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSelectedColumns",
+					"Decl": "func (s *QuerySuite) TestSelectedColumns()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestString",
+					"Decl": "func (s *QuerySuite) TestString()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestWhere",
+					"Decl": "func (s *QuerySuite) TestWhere()",
+					"Recv": "*QuerySuite",
+					"Orig": "*QuerySuite",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "Record is something that can be stored as a row in the database.\n",
+			"Name": "Record",
+			"Decl": "type Record interface {\n\tIdentifiable\n\tPersistable\n\tWritable\n\tRelationable\n\tColumnAddresser\n\tValuer\n\tVirtualColumnContainer\n}",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "RecordConstructor is a function that creates a record.\n",
+			"Name": "RecordConstructor",
+			"Decl": "type RecordConstructor func() Record",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "RecordWithSchema is a structure that contains both a record and its schema.\nOnly for internal purposes.\n",
+			"Name": "RecordWithSchema",
+			"Decl": "type RecordWithSchema struct {\n\tSchema\tSchema\n\tRecord\tRecord\n}",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Relationable can perform operations related to relationships of a record.\n",
+			"Name": "Relationable",
+			"Decl": "type Relationable interface {\n\tNewRelationshipRecord(string) (Record, error)\n\tSetRelationship(string, interface{}) error\n}// NewRelationshipRecord returns a new Record for the relationship at the\n// given field.\n// SetRelationship sets the relationship value at the given field.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Relationship is a relationship with its schema and the field of te relation\nin the record.\n",
+			"Name": "Relationship",
+			"Decl": "type Relationship struct {\n\tType\tRelationshipType\n\tField\tstring\n\tSchema\tSchema\n\tFilter\tCondition\n}// Type is the kind of relationship this is.\n// Filter establishes the filter to be applied when retrieving rows of the\n// relationships.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "RelationshipType describes the type of the relationship.\n",
+			"Name": "RelationshipType",
+			"Decl": "type RelationshipType byte",
+			"Consts": [
+				{
+					"Doc": "",
+					"Names": [
+						"OneToOne",
+						"OneToMany",
+						"ManyToMany"
+					],
+					"Decl": "const (\n\tOneToOne\tRelationshipType\t= iota\n\tOneToMany\n\tManyToMany\n)// OneToOne is a relationship between one record in a table and another in\n// another table.\n// ManyToMany is a relationship between many records on both sides of the\n// relationship.\n// NOTE: It is not supported yet.\n"
+				}
+			],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ResultSet is the common interface all result sets need to implement.\n",
+			"Name": "ResultSet",
+			"Decl": "type ResultSet interface {\n\tRawScan(...interface{}) error\n\tNext() bool\n\tGet(Schema) (Record, error)\n\tio.Closer\n}// RawScan allows for raw scanning of fields in a result set.\n// Get returns the next record of the given schema.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ScalarCond returns a kallax.Condition that compares a property with the passed\nvalues, considering its scalar values (eq, gt, gte, lt, lte, neq)\n",
+			"Name": "ScalarCond",
+			"Decl": "type ScalarCond func(col SchemaField, value interface{}) Condition",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Schema represents a table schema in the database. Contains some information\nlike the table name, its columns, its identifier and so on.\n",
+			"Name": "Schema",
+			"Decl": "type Schema interface {\n\tAlias() string\n\tTable() string\n\tID() SchemaField\n\tColumns() [ // Alias returns the name of the alias used in queries for this schema.\n\t// Columns returns the list of columns in the schema.\n\t]SchemaField\n\tForeignKey(string) (*ForeignKey, bool)\n\tWithAlias(string) Schema\n\tNew() Record\n\n}// ForeignKey returns the name of the foreign key of the given model field.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "SchemaField is a named field in the table schema.\n",
+			"Name": "SchemaField",
+			"Decl": "type SchemaField interface {\n\tString() string\n\tQualifiedName(Schema) string\n\n}// String returns the string representation of the field. That is, its name.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "AtJSONPath returns the schema field to query an arbitrary JSON element at\nthe given path.\n",
+					"Name": "AtJSONPath",
+					"Decl": "func AtJSONPath(field SchemaField, typ JSONKeyType, path ...string) SchemaField",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NewSchemaField creates a new schema field with the given name.\n",
+					"Name": "NewSchemaField",
+					"Decl": "func NewSchemaField(name string) SchemaField",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": []
+		},
+		{
+			"Doc": "Store is a structure capable of retrieving records from a concrete table in\nthe database.\n",
+			"Name": "Store",
+			"Decl": "type Store struct {\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewStore returns a new Store instance.\n",
+					"Name": "NewStore",
+					"Decl": "func NewStore(db *sql.DB) *Store",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "Count returns the number of rows selected by the given query.\n",
+					"Name": "Count",
+					"Decl": "func (s *Store) Count(q Query) (count int64, err error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Debug returns a new store that will print all SQL statements to stdout using\nthe log.Printf function.\n",
+					"Name": "Debug",
+					"Decl": "func (s *Store) Debug() *Store",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "DebugWith returns a new store that will print all SQL statements using the\ngiven logger function.\n",
+					"Name": "DebugWith",
+					"Decl": "func (s *Store) DebugWith(logger LoggerFunc) *Store",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Delete removes the record from the table. A non-new record with non-empty\nID is required.\n",
+					"Name": "Delete",
+					"Decl": "func (s *Store) Delete(schema Schema, record Record) error",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Find performs a query and returns a result set with the results.\n",
+					"Name": "Find",
+					"Decl": "func (s *Store) Find(q Query) (ResultSet, error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Insert insert the given record in the table, returns error if no-new\nrecord is given. The record id is set if it's empty.\n",
+					"Name": "Insert",
+					"Decl": "func (s *Store) Insert(schema Schema, record Record) error",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "MustCount returns the number of rows selected by the given query. It panics\nif the query fails.\n",
+					"Name": "MustCount",
+					"Decl": "func (s *Store) MustCount(q Query) int64",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "MustFind performs a query and returns a result set with the results.\nIt panics if the query fails.\n",
+					"Name": "MustFind",
+					"Decl": "func (s *Store) MustFind(q Query) ResultSet",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "RawExec executes a raw SQL query with the given parameters and returns\nthe number of affected rows.\n",
+					"Name": "RawExec",
+					"Decl": "func (s *Store) RawExec(sql string, params ...interface{}) (int64, error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "RawQuery performs a raw SQL query with the given parameters and returns a\nresult set with the results.\nWARNING: A result set created from a raw query can only be scanned using the\nRawScan method of ResultSet, instead of Scan.\n",
+					"Name": "RawQuery",
+					"Decl": "func (s *Store) RawQuery(sql string, params ...interface{}) (ResultSet, error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Reload refreshes the record with the data in the database and makes the\nrecord writable.\n",
+					"Name": "Reload",
+					"Decl": "func (s *Store) Reload(schema Schema, record Record) error",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Save inserts or updates the given record in the table.\n",
+					"Name": "Save",
+					"Decl": "func (s *Store) Save(schema Schema, record Record) (updated bool, err error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Transaction executes the given callback in a transaction and rollbacks if\nan error is returned.\nThe transaction is only open in the store passed as a parameter to the\ncallback.\nIf a transaction is already opened in this store, instead of opening a new\none, the other will be reused.\n",
+					"Name": "Transaction",
+					"Decl": "func (s *Store) Transaction(callback func(*Store) error) error",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				},
+				{
+					"Doc": "Update updates the given fields of a record in the table. All fields are\nupdated if no fields are provided. For an update to take place, the record is\nrequired to have a non-empty ID and not to be a new record.\nReturns the number of updated rows and an error, if any.\n",
+					"Name": "Update",
+					"Decl": "func (s *Store) Update(schema Schema, record Record, cols ...SchemaField) (int64, error)",
+					"Recv": "*Store",
+					"Orig": "*Store",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "",
+			"Name": "StoreSuite",
+			"Decl": "type StoreSuite struct {\n\tsuite.Suite\n\n}// contains filtered or unexported fields\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "",
+					"Name": "SetupTest",
+					"Decl": "func (s *StoreSuite) SetupTest()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TearDownTest",
+					"Decl": "func (s *StoreSuite) TearDownTest()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestCount",
+					"Decl": "func (s *StoreSuite) TestCount()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestDebugWith",
+					"Decl": "func (s *StoreSuite) TestDebugWith()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestDelete",
+					"Decl": "func (s *StoreSuite) TestDelete()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind",
+					"Decl": "func (s *StoreSuite) TestFind()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_1to1",
+					"Decl": "func (s *StoreSuite) TestFind_1to1()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_1toN",
+					"Decl": "func (s *StoreSuite) TestFind_1toN()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_1toNAnd1to1",
+					"Decl": "func (s *StoreSuite) TestFind_1toNAnd1to1()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_1toNMultiple",
+					"Decl": "func (s *StoreSuite) TestFind_1toNMultiple()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_1toN_Filter",
+					"Decl": "func (s *StoreSuite) TestFind_1toN_Filter()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestFind_Fail",
+					"Decl": "func (s *StoreSuite) TestFind_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestInsert",
+					"Decl": "func (s *StoreSuite) TestInsert()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestInsert_Fail",
+					"Decl": "func (s *StoreSuite) TestInsert_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestInsert_IDEmpty",
+					"Decl": "func (s *StoreSuite) TestInsert_IDEmpty()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestInsert_NoColumns",
+					"Decl": "func (s *StoreSuite) TestInsert_NoColumns()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestInsert_NotNew",
+					"Decl": "func (s *StoreSuite) TestInsert_NotNew()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestMustCount",
+					"Decl": "func (s *StoreSuite) TestMustCount()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestMustFind",
+					"Decl": "func (s *StoreSuite) TestMustFind()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestRawExec",
+					"Decl": "func (s *StoreSuite) TestRawExec()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestRawExec_Fail",
+					"Decl": "func (s *StoreSuite) TestRawExec_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestRawQuery",
+					"Decl": "func (s *StoreSuite) TestRawQuery()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestRawQuery_Fail",
+					"Decl": "func (s *StoreSuite) TestRawQuery_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestRawQuery_Transaction",
+					"Decl": "func (s *StoreSuite) TestRawQuery_Transaction()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestReload",
+					"Decl": "func (s *StoreSuite) TestReload()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestReload_Fail",
+					"Decl": "func (s *StoreSuite) TestReload_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestReload_NotFound",
+					"Decl": "func (s *StoreSuite) TestReload_NotFound()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestSave",
+					"Decl": "func (s *StoreSuite) TestSave()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestTransaction",
+					"Decl": "func (s *StoreSuite) TestTransaction()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestTransaction_CantOpen",
+					"Decl": "func (s *StoreSuite) TestTransaction_CantOpen()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestTransaction_RawExec",
+					"Decl": "func (s *StoreSuite) TestTransaction_RawExec()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestTransaction_Rollback",
+					"Decl": "func (s *StoreSuite) TestTransaction_Rollback()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestUpdate",
+					"Decl": "func (s *StoreSuite) TestUpdate()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestUpdate_ColumnNotFound",
+					"Decl": "func (s *StoreSuite) TestUpdate_ColumnNotFound()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestUpdate_Fail",
+					"Decl": "func (s *StoreSuite) TestUpdate_Fail()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "TestUpdate_NotUpdated",
+					"Decl": "func (s *StoreSuite) TestUpdate_NotUpdated()",
+					"Recv": "*StoreSuite",
+					"Orig": "*StoreSuite",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "Timestamps contains the dates of the last time the model was created\nor deleted. Because this is such a common functionality in models, it is\nprovided by default by the library. It is intended to be embedded in the\nmodel.\n\n\ttype MyModel struct {\n\t\tkallax.Model\n\t\tkallax.Timestamps\n\t\tFoo string\n\t}\n",
+			"Name": "Timestamps",
+			"Decl": "type Timestamps struct {\n\tCreatedAt\ttime.Time\n\tUpdatedAt\ttime.Time\n}// CreatedAt is the time where the object was created.\n// UpdatedAt is the time where the object was updated.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "BeforeSave updates the last time the model was updated every single time the\nmodel is saved, and the last time the model was created only if the model\nhas no date of creation yet.\n",
+					"Name": "BeforeSave",
+					"Decl": "func (t *Timestamps) BeforeSave() error",
+					"Recv": "*Timestamps",
+					"Orig": "*Timestamps",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "ToSqler is the interface that wraps the ToSql method. It's a wrapper around\nsquirrel.Sqlizer to avoid having to import that as well when using kallax.\n",
+			"Name": "ToSqler",
+			"Decl": "type ToSqler interface {\n\tsquirrel.Sqlizer\n}",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "ULID is an ID type provided by kallax that is a lexically sortable UUID.\nThe internal representation is an ULID (https://github.com/oklog/ulid).\nIt already implements sql.Scanner and driver.Valuer, so it's perfectly\nsafe for database usage.\n",
+			"Name": "ULID",
+			"Decl": "type ULID uuid.UUID",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [
+				{
+					"Doc": "NewULID returns a new ULID, which is a lexically sortable UUID.\n",
+					"Name": "NewULID",
+					"Decl": "func NewULID() ULID",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				},
+				{
+					"Doc": "NewULIDFromText creates a new ULID from its string representation. Will\nreturn an error if the text is not a valid ULID.\n",
+					"Name": "NewULIDFromText",
+					"Decl": "func NewULIDFromText(text string) (ULID, error)",
+					"Recv": "",
+					"Orig": "",
+					"Level": 0
+				}
+			],
+			"Methods": [
+				{
+					"Doc": "Equals reports whether the ID and the given one are equals.\n",
+					"Name": "Equals",
+					"Decl": "func (id ULID) Equals(other Identifier) bool",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "IsEmpty returns whether the ID is empty or not. An empty ID means it has not\nbeen set yet.\n",
+					"Name": "IsEmpty",
+					"Decl": "func (id ULID) IsEmpty() bool",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "",
+					"Name": "MarshalText",
+					"Decl": "func (id ULID) MarshalText() ([]byte, error)",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "Raw returns the underlying raw value.\n",
+					"Name": "Raw",
+					"Decl": "func (id ULID) Raw() interface{}",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "Scan implements the Scanner interface.\n",
+					"Name": "Scan",
+					"Decl": "func (id *ULID) Scan(src interface{}) error",
+					"Recv": "*ULID",
+					"Orig": "*ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "String returns the string representation of the ID.\n",
+					"Name": "String",
+					"Decl": "func (id ULID) String() string",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "UnmarshalText implements the encoding.TextUnmarshaler interface.\nFollowing formats are supported:\n\"6ba7b810-9dad-11d1-80b4-00c04fd430c8\",\n\"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}\",\n\"urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8\"\nImplements the exact same code as the UUID UnmarshalText removing the\nversion check.\n",
+					"Name": "UnmarshalText",
+					"Decl": "func (u *ULID) UnmarshalText(text []byte) (err error)",
+					"Recv": "*ULID",
+					"Orig": "*ULID",
+					"Level": 0
+				},
+				{
+					"Doc": "Value implements the Valuer interface.\n",
+					"Name": "Value",
+					"Decl": "func (id ULID) Value() (driver.Value, error)",
+					"Recv": "ULID",
+					"Orig": "ULID",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "UUID is a wrapper type for uuid.UUID that implements the Identifier\ninterface.\nYou don't need to actually use this as a type in your model. They will be\nautomatically converted to and from in the generated code.\n",
+			"Name": "UUID",
+			"Decl": "type UUID uuid.UUID",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": [
+				{
+					"Doc": "Equals reports whether the ID and the given one are equals.\n",
+					"Name": "Equals",
+					"Decl": "func (id UUID) Equals(other Identifier) bool",
+					"Recv": "UUID",
+					"Orig": "UUID",
+					"Level": 0
+				},
+				{
+					"Doc": "IsEmpty returns whether the ID is empty or not. An empty ID means it has not\nbeen set yet.\n",
+					"Name": "IsEmpty",
+					"Decl": "func (id UUID) IsEmpty() bool",
+					"Recv": "UUID",
+					"Orig": "UUID",
+					"Level": 0
+				},
+				{
+					"Doc": "Raw returns the underlying raw value.\n",
+					"Name": "Raw",
+					"Decl": "func (id UUID) Raw() interface{}",
+					"Recv": "UUID",
+					"Orig": "UUID",
+					"Level": 0
+				},
+				{
+					"Doc": "Scan implements the Scanner interface.\n",
+					"Name": "Scan",
+					"Decl": "func (id *UUID) Scan(src interface{}) error",
+					"Recv": "*UUID",
+					"Orig": "*UUID",
+					"Level": 0
+				},
+				{
+					"Doc": "String returns the string representation of the ID.\n",
+					"Name": "String",
+					"Decl": "func (id UUID) String() string",
+					"Recv": "UUID",
+					"Orig": "UUID",
+					"Level": 0
+				},
+				{
+					"Doc": "Value implements the Valuer interface.\n",
+					"Name": "Value",
+					"Decl": "func (id UUID) Value() (driver.Value, error)",
+					"Recv": "UUID",
+					"Orig": "UUID",
+					"Level": 0
+				}
+			]
+		},
+		{
+			"Doc": "Valuer provides the values for columns.\n",
+			"Name": "Valuer",
+			"Decl": "type Valuer interface {\n\tValue(string) (interface{}, error)\n}// Value returns the value of the given column, or an error if it does not\n// exist in the model.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "VirtualColumnContainer contains a collection of virtual columns and\nmanages them.\n",
+			"Name": "VirtualColumnContainer",
+			"Decl": "type VirtualColumnContainer interface {\n\tClearVirtualColumns()\n\tAddVirtualColumn(string, Identifier)\n\tVirtualColumn(string) Identifier\n}// ClearVirtualColumns removes all virtual columns.\n// VirtualColumn returns the virtual column with the given column name.\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		},
+		{
+			"Doc": "Writable must be implemented by those values that defines internally\nif they can be sent back to the database to be stored with its changes.\n",
+			"Name": "Writable",
+			"Decl": "type Writable interface {\n\tIsWritable() bool\n\n}// IsWritable returns whether this Model can be saved into the database.\n// contains filtered or unexported methods\n",
+			"Consts": [],
+			"Vars": [],
+			"Funcs": [],
+			"Methods": []
+		}
+	],
+	"Vars": [
+		{
+			"Doc": "",
+			"Names": [
+				"ErrNonNewDocument",
+				"ErrNewDocument",
+				"ErrEmptyID",
+				"ErrNoRowUpdate",
+				"ErrNotWritable",
+				"ErrStop",
+				"ErrInvalidTxCallback",
+				"ErrNotFound",
+				"ErrCantSetID",
+				"ErrNoColumns"
+			],
+			"Decl": "var (\n\tErrNonNewDocument\t= errors.New(\"kallax: cannot insert a non new document\")\n\tErrNewDocument\t\t= errors.New(\"kallax: cannot updated a new document\")\n\tErrEmptyID\t\t= errors.New(\"kallax: a record without id is not allowed\")\n\tErrNoRowUpdate\t\t= errors.New(\"kallax: update affected no rows\")\n\tErrNotWritable\t\t= errors.New(\"kallax: record is not writable\")\n\tErrStop\t\t\t= errors.New(\"kallax: stopped ForEach execution\")\n\tErrInvalidTxCallback\t= errors.New(\"kallax: invalid transaction callback given\")\n\tErrNotFound\t\t= errors.New(\"kallax: entity not found\")\n\tErrCantSetID\t\t= errors.New(\"kallax: model does not have an auto incrementable primary key, it needs to implement IDSetter interface\")\n\tErrNoColumns\t\t= errors.New(\"kallax: your model does not have any column besides its autoincrementable primary key and cannot be inserted\")\n)// ErrNonNewDocument non-new documents cannot be inserted\n// ErrNoColumns is an error returned when the user tries to insert a model\n// with no other columns than the autoincrementable primary key.\n"
+		},
+		{
+			"Doc": "",
+			"Names": [
+				"ErrManyToManyNotSupported"
+			],
+			"Decl": "var (\n\tErrManyToManyNotSupported = errors.New(\"kallax: many to many relationships are not supported\")\n)// ErrManyToManyNotSupported is returned when a many to many relationship\n// is added to a query.\n"
+		},
+		{
+			"Doc": "ErrRawScan is an error returned when a the `Scan` method of `ResultSet`\nis called with a `ResultSet` created as a result of a `RawQuery`, which is\nnot allowed.\n",
+			"Names": [
+				"ErrRawScan"
+			],
+			"Decl": "var ErrRawScan = errors.New(\"kallax: result set comes from raw query, use RawScan instead\")"
+		},
+		{
+			"Doc": "ErrRawScanBatching is an error returned when the `RawScan` method is used\nwith a batching result set.\n",
+			"Names": [
+				"ErrRawScanBatching"
+			],
+			"Decl": "var ErrRawScanBatching = errors.New(\"kallax: cannot perform a raw scan on a batching result set\")"
+		},
+		{
+			"Doc": "",
+			"Names": [
+				"JsonsSchema"
+			],
+			"Decl": "var JsonsSchema = \u0026BaseSchema{alias: \"_js\", table: \"jsons\", id: f(\"id\"), columns: []SchemaField{f(\"id\"), f(\"elem\")}}"
+		},
+		{
+			"Doc": "",
+			"Names": [
+				"ModelSchema"
+			],
+			"Decl": "var ModelSchema = NewBaseSchema(\"model\", \"__model\", f(\"id\"), ForeignKeys{\"rel\": NewForeignKey(\"model_id\", false), \"rels\": NewForeignKey(\"model_id\", false), \"rel_inv\": NewForeignKey(\"model_id\", true)}, func() Record {\n\treturn new(model)\n}, true, f(\"id\"), f(\"name\"), f(\"email\"), f(\"age\"))"
+		},
+		{
+			"Doc": "",
+			"Names": [
+				"RelSchema"
+			],
+			"Decl": "var RelSchema = NewBaseSchema(\"rel\", \"__rel\", f(\"id\"), ForeignKeys{}, func() Record {\n\treturn new(rel)\n}, true, f(\"id\"), f(\"model_id\"), f(\"foo\"))"
+		},
+		{
+			"Doc": "",
+			"Names": [
+				"SlicesSchema"
+			],
+			"Decl": "var SlicesSchema = \u0026BaseSchema{alias: \"_sl\", table: \"slices\", id: f(\"id\"), columns: []SchemaField{f(\"id\"), f(\"elems\")}}"
+		}
+	],
+	"Funcs": [
+		{
+			"Doc": "ApplyAfterEvents calls all the update, insert or save after events of the\nrecord. Save events are always called after the insert or update event.\n",
+			"Name": "ApplyAfterEvents",
+			"Decl": "func ApplyAfterEvents(r Record, wasPersisted bool) error",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "ApplyBeforeEvents calls all the update, insert or save before events of the\nrecord. Save events are always called before the insert or update event.\n",
+			"Name": "ApplyBeforeEvents",
+			"Decl": "func ApplyBeforeEvents(r Record) error",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "ColumnNames returns the names of the given schema fields.\n",
+			"Name": "ColumnNames",
+			"Decl": "func ColumnNames(columns []SchemaField) []string",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "NewMultiOperator creates a new operator with a schema field and a variable number\nof values as arguments. The given format will define how the SQL is generated.\nYou can put `:col:` wherever you want your column name to be on the format and\n`?` for the values, which will be automatically escaped.\nExample: `:col: IN :arg:`. You don't need to wrap the arg with parenthesis.\n",
+			"Name": "NewMultiOperator",
+			"Decl": "func NewMultiOperator(format string) func(SchemaField, ...interface{}) Condition",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "NewOperator creates a new operator with two arguments: a schema field and\na value. The given format will define how the SQL is generated.\nYou can put `:col:` wherever you want your column name to be on the format and\n`?` for the value, which will be automatically escaped.\nExample: `:col: % :arg:`.\n",
+			"Name": "NewOperator",
+			"Decl": "func NewOperator(format string) func(SchemaField, interface{}) Condition",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "RecordValues returns the values of a record at the given columns in the same\norder as the columns.\n",
+			"Name": "RecordValues",
+			"Decl": "func RecordValues(record Valuer, columns ...string) ([]interface{}, error)",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "StoreFrom sets the generic store of `from` in `to`.\n",
+			"Name": "StoreFrom",
+			"Decl": "func StoreFrom(to, from GenericStorer)",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		},
+		{
+			"Doc": "VirtualColumn returns a sql.Scanner that will scan the given column as a\nvirtual column in the given record.\n",
+			"Name": "VirtualColumn",
+			"Decl": "func VirtualColumn(col string, r Record, id Identifier) sql.Scanner",
+			"Recv": "",
+			"Orig": "",
+			"Level": 0
+		}
+	]
+}
