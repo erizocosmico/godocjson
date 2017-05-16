@@ -3,8 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"go/ast"
 	"go/doc"
+	"go/parser"
 	"go/printer"
 	"go/token"
 	"log"
@@ -71,11 +74,39 @@ func NewPkg(pkg *doc.Package, fset *token.FileSet) *Pkg {
 	}
 }
 
+type Pos struct {
+	Start *FilePos
+	End   *FilePos
+}
+
+func NewPos(node ast.Node, fset *token.FileSet) *Pos {
+	return &Pos{
+		Start: NewFilePos(node.Pos(), fset),
+		End:   NewFilePos(node.End(), fset),
+	}
+}
+
+type FilePos struct {
+	Line   int
+	Column int
+	File   string
+}
+
+func NewFilePos(pos token.Pos, fset *token.FileSet) *FilePos {
+	p := fset.Position(pos)
+	return &FilePos{
+		Line:   p.Line,
+		Column: p.Column,
+		File:   removeGoPath(p.Filename),
+	}
+}
+
 type Type struct {
 	Kind string
 	Doc  string
 	Name string
 	Decl string
+	Pos  *Pos
 
 	Consts  []*Value
 	Vars    []*Value
@@ -116,6 +147,7 @@ func NewType(typ *doc.Type, fset *token.FileSet) *Type {
 		Vars:    vars,
 		Funcs:   funcs,
 		Methods: methods,
+		Pos:     NewPos(typ.Decl, fset),
 	}
 }
 
@@ -124,6 +156,7 @@ type Value struct {
 	Doc   string
 	Names []string
 	Decl  string
+	Pos   *Pos
 }
 
 func NewValue(val *doc.Value, fset *token.FileSet) *Value {
@@ -134,6 +167,7 @@ func NewValue(val *doc.Value, fset *token.FileSet) *Value {
 		Doc:   val.Doc,
 		Names: val.Names,
 		Decl:  buf.String(),
+		Pos:   NewPos(val.Decl, fset),
 	}
 }
 
@@ -146,6 +180,8 @@ type Func struct {
 	Recv  string
 	Orig  string
 	Level int
+
+	Pos *Pos
 }
 
 func NewFunc(fn *doc.Func, fset *token.FileSet) *Func {
@@ -159,6 +195,7 @@ func NewFunc(fn *doc.Func, fset *token.FileSet) *Func {
 		Orig:  fn.Orig,
 		Level: fn.Level,
 		Decl:  buf.String(),
+		Pos:   NewPos(fn.Decl, fset),
 	}
 }
 
@@ -172,7 +209,8 @@ func main() {
 		log.Fatal("-pkg cannot be empty")
 	}
 
-	pkg, err := parseutil.PackageAST(pkgName)
+	fset := token.NewFileSet()
+	pkg, err := parsePackage(pkgName, fset)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -182,12 +220,39 @@ func main() {
 		return !strings.HasPrefix(name, "Test")
 	})
 
-	bytes, err := json.MarshalIndent(NewPkg(docPkg, token.NewFileSet()), "", "\t")
+	bytes, err := json.MarshalIndent(NewPkg(docPkg, fset), "", "\t")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println(string(bytes))
+}
+
+func parsePackage(pkgName string, fset *token.FileSet) (*ast.Package, error) {
+	srcDir, err := parseutil.DefaultGoPath.Abs(pkgName)
+	if err != nil {
+		return nil, err
+	}
+
+	pkgs, err := parser.ParseDir(fset, srcDir, func(fi os.FileInfo) bool {
+		return !strings.HasSuffix(fi.Name(), "_test.go")
+	}, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+
+	var pkg *ast.Package
+	for name, p := range pkgs {
+		if !strings.HasSuffix(name, "_test") {
+			pkg = p
+		}
+	}
+
+	if pkg == nil {
+		return nil, errors.New("no package found at given package name")
+	}
+
+	return pkg, nil
 }
 
 func removeGoPath(path string) string {
